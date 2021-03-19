@@ -1,6 +1,8 @@
 package gloomyfish.opencvdemo;
 
+import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -16,8 +18,13 @@ import com.book.datamodel.SectionsListViewAdaptor;
 
 import org.opencv.android.OpenCVLoader;
 
+import gloomyfish.opencvdemo.util.PermissionsUtils;
+
 public class MainActivity extends AppCompatActivity {
-    private String CV_TAG = "OpenCV";
+    private String TAG = MainActivity.class.getSimpleName();
+    private final int REQUEST_CODE_PERMISSIONS = 10;
+    private String[] PERMISSIONS = new String[]{Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,12 +32,43 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         iniLoadOpenCV();
         initListView();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            PermissionsUtils.checkAndRequestMorePermissions(this, PERMISSIONS, REQUEST_CODE_PERMISSIONS,
+                    new PermissionsUtils.PermissionRequestSuccessCallBack() {
+                        @Override
+                        public void onHasPermission() {
+                            StringBuilder sb = new StringBuilder();
+                            for (String str : PERMISSIONS) {
+                                sb.append(str + ",");
+                            }
+                            String msg = String.format("%s has allowed !", sb.substring(0, sb.length() - 1));
+                            Log.d(TAG, "onHasPermission: " + msg);
+                            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (PermissionsUtils.isPermissionRequestSuccess(grantResults)) {
+            StringBuilder sb = new StringBuilder();
+            for (String str : PERMISSIONS) {
+                sb.append(str + ",");
+            }
+
+            String msg = String.format("%s has allowed !", sb.substring(0, sb.length() - 1));
+            Log.d(TAG, "onRequestPermissionsResult: " + msg);
+            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void iniLoadOpenCV() {
         boolean success = OpenCVLoader.initDebug();
-        if(success) {
-            Log.i(CV_TAG, "OpenCV Libraries loaded...");
+        if (success) {
+            Log.i(TAG, "OpenCV Libraries loaded...");
         } else {
             Toast.makeText(this.getApplicationContext(), "WARNING: Could not load OpenCV Libraries!", Toast.LENGTH_LONG).show();
         }

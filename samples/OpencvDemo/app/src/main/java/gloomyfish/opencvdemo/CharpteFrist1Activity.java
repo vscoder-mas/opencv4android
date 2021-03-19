@@ -29,13 +29,13 @@ public class CharpteFrist1Activity extends AppCompatActivity implements View.OnC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_charpte_frist1);
 
-        Button processBtn = (Button)this.findViewById(R.id.process_btn);
+        Button processBtn = (Button) this.findViewById(R.id.process_btn);
         processBtn.setOnClickListener(this);
 
-        Button takePicBtn = (Button)this.findViewById(R.id.select_pic_btn);
+        Button takePicBtn = (Button) this.findViewById(R.id.select_pic_btn);
         takePicBtn.setOnClickListener(this);
 
-        Button selectPicBtn = (Button)this.findViewById(R.id.take_pic_btn);
+        Button selectPicBtn = (Button) this.findViewById(R.id.take_pic_btn);
         selectPicBtn.setOnClickListener(this);
     }
 
@@ -58,29 +58,38 @@ public class CharpteFrist1Activity extends AppCompatActivity implements View.OnC
     }
 
     private void convert2Gray() {
-        Mat src = Imgcodecs.imread(fileUri.getPath());
-        if(src.empty()) {
-            return;
+        if (fileUri == null) {
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.lena);
+            Mat src = new Mat();
+            Mat dest = new Mat();
+            Utils.bitmapToMat(bitmap, src);
+            Imgproc.cvtColor(src, dest, Imgproc.COLOR_BGRA2GRAY);
+            Utils.matToBitmap(dest, bitmap);
+            ImageView imgShow = (ImageView) this.findViewById(R.id.sample_img);
+            imgShow.setImageBitmap(bitmap);
+            src.release();
+            dest.release();
+        } else {
+            Mat src = Imgcodecs.imread(fileUri.getPath());
+            Mat dst = new Mat();
+            Imgproc.cvtColor(src, dst, Imgproc.COLOR_BGR2GRAY);
+            Bitmap bitmap = grayMat2Bitmap(dst);
+            ImageView iv = (ImageView) this.findViewById(R.id.sample_img);
+            iv.setImageBitmap(bitmap);
+            src.release();
+            dst.release();
         }
-        Mat dst = new Mat();
-
-        Imgproc.cvtColor(src, dst, Imgproc.COLOR_BGR2GRAY);
-        Bitmap bitmap = grayMat2Bitmap(dst);
-        ImageView iv = (ImageView)this.findViewById(R.id.sample_img);
-        iv.setImageBitmap(bitmap);
-        src.release();
-        dst.release();
     }
 
     private Bitmap grayMat2Bitmap(Mat result) {
         Mat image = null;
-        if(result.cols() > 1000 || result.rows() > 1000) {
+        if (result.cols() > 1000 || result.rows() > 1000) {
             image = new Mat();
             Imgproc.resize(result, image, new Size(result.cols() / 4, result.rows() / 4));
         } else {
             image = result;
         }
-        Bitmap bitmap = Bitmap.createBitmap(image.cols(),image.rows(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(image.cols(), image.rows(), Bitmap.Config.ARGB_8888);
         Imgproc.cvtColor(image, image, Imgproc.COLOR_GRAY2RGBA);
         Utils.matToBitmap(image, bitmap);
         image.release();
@@ -104,8 +113,8 @@ public class CharpteFrist1Activity extends AppCompatActivity implements View.OnC
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-            if(data != null) {
+        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
+            if (data != null) {
                 Uri uri = data.getData();
                 File f = new File(ImageSelectUtils.getRealPath(uri, getApplicationContext()));
                 fileUri = Uri.fromFile(f);
@@ -115,17 +124,17 @@ public class CharpteFrist1Activity extends AppCompatActivity implements View.OnC
     }
 
     private void displaySelectedImage() {
-        if(fileUri == null) return;
-        ImageView imageView = (ImageView)this.findViewById(R.id.sample_img);
+        if (fileUri == null) return;
+        ImageView imageView = (ImageView) this.findViewById(R.id.sample_img);
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(fileUri.getPath(), options);
         int w = options.outWidth;
         int h = options.outHeight;
         int inSample = 1;
-        if(w > 1000 || h > 1000) {
-            while(Math.max(w/inSample, h/inSample) > 1000) {
-                inSample *=2;
+        if (w > 1000 || h > 1000) {
+            while (Math.max(w / inSample, h / inSample) > 1000) {
+                inSample *= 2;
             }
         }
         options.inJustDecodeBounds = false;

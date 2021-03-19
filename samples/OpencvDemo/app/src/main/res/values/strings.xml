@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpencvDemo</string>
+    <string name="app_name">TestOpencv</string>
     <string name="title_activity_sections">SectionsActivity</string>
     <string name="invert">取反</string>
     <string name="edge">边缘</string>
